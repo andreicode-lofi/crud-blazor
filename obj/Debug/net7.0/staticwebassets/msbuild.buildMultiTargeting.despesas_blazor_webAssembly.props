@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\despesas_blazor_webAssembly.props" />
+</Project>

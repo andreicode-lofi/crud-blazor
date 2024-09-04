@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\buildMultiTargeting\despesas_blazor_webAssembly.props" />
+</Project>

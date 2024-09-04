@@ -1,0 +1,118 @@
+﻿@page "/Produto"
+
+@using despesas_blazor_webAssembly.Models
+@using despesas_blazor_webAssembly.Service.Interface
+
+@inject IJSRuntime JsRuntime
+@inject IProdutoService _iprodutoService
+
+<PageTitle>Produtos</PageTitle>
+
+    <h1>Cadastro Produto</h1>
+
+        <button class="btn btn-primary" @onclick="() => OpenModal()">Criar Produto</button>
+
+@if(produto == null)
+{
+    <p><em>Carregar...</em></p>
+}
+else
+{
+    <table class='table'>
+        <thead>
+            <tr>
+
+                <th>Name</th>
+                <th>Descriçao</th>
+                <th>Valor</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var produto in produtos)
+            {
+                <tr>
+                    <td>@produto.Nome</td>
+                    <td>@produto.Descricao</td>
+                    <td>@produto.Valor</td>
+                    <td>
+                        <a href='#' @onclick="async () => await Delete(produto.Id)">Deletar</a>
+                    </td>
+                </tr>
+
+            }
+        </tbody>
+    </table>
+}
+
+<!------------------------------------------------------------------------------------------------------------>
+
+<ModalDialog @ref="@modalDialog" Title="Criar Produto">
+    <div class="row">
+        <div class="form-group">
+            <label for="spendDescription" class="col-form-label">Name:</label>
+            <input @bind-value="produto.Nome" type="text" class="form-control" id="produtoNome">
+        </div>
+        <div class="form-group">
+            <label for="spendDescription" class="col-form-label">Description:</label>
+            <input @bind-value="produto.Descricao" type="text" class="form-control" id="produtoDescription">
+        </div>
+        <div class="form-group">
+            <label for="spendDescription" class="col-form-label">Valor:</label>
+            <input @bind-value="produto.Valor" type="text" class="form-control" id="produtoValor">
+        </div>
+       
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" @onclick="() => modalDialog.Close()">Cancelar</button>
+            <button type="button" class="btn btn-primary" @onclick="async () => await AddProduto()">Salvar</button>
+        </div>
+    </div>
+</ModalDialog>
+
+@code {
+    private ModalDialog? modalDialog { get; set; }
+    private Produto? produto { get; set; }
+    private List<Produto> produtos = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        produto = new();
+        produtos = await _iprodutoService.GetProguto();
+    }
+
+    async Task Delete(Guid id)
+    {
+        // bool confirmed = await JsRuntime.InvokeAsync<bool>("Confirm", "Tem certeza que deseja excluir ?");
+        // if (confirmed is false)
+        //     return;
+
+        var produtoToRemove = produtos.FirstOrDefault(p => p.Id == id);
+        produtos.Remove(produtoToRemove);
+
+        await _iprodutoService.SaveProduto(produtos);
+    }
+
+    async Task AddProduto()
+    {
+        if (string.IsNullOrWhiteSpace(produto.Nome))
+        {
+            await JsRuntime.InvokeAsync<bool>("Alert", "Você precisa colocar o nome do produto");
+        }
+
+        produtos.Add(new Produto()
+        {
+            Id = Guid.NewGuid(),
+            Nome = produto.Nome,
+            Descricao = produto.Descricao,
+            Valor = produto.Valor
+        });  
+    }
+
+    void OpenModal()
+    {
+        produto = new();
+        modalDialog.Open();
+    }
+}
